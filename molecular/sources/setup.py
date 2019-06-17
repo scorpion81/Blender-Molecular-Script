@@ -6,7 +6,8 @@ import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
 
 #ext_modules = [Extension("cmolcore", ["cmolcore.pyx"],extra_compile_args=['-march=i686','-fopenmp'],extra_link_args=['-fopenmp'])]
-ext_modules = [Extension("cmolcore", ["cmolcore.pyx"],extra_compile_args=['-march=i686','-O3','-ffast-math','-fopenmp'],extra_link_args=['-fopenmp'])]
+#ext_modules = [Extension("cmolcore", ["cmolcore.pyx"],extra_compile_args=['-march=i686','-O3','-ffast-math','-fopenmp'],extra_link_args=['-fopenmp'])]
+ext_modules = [Extension("cmolcore", ["cmolcore.pyx"],extra_compile_args=['-O3','-ffast-math','-fopenmp'],extra_link_args=['-fopenmp'])]
 
 setup(
   name = 'Molecular script',

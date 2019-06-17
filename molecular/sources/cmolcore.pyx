@@ -32,7 +32,7 @@ cdef Particle *parlist = NULL
 cdef SParticle *parlistcopy = NULL
 cdef ParSys *psys = NULL
 cdef KDTree *kdtree = NULL
-print("cmolcore imported with success! v1.01")
+print("cmolcore imported with success! v1.02")
 
 cpdef init(importdata):
     global fps
@@ -866,6 +866,14 @@ cdef void solve_link(Particle *par)nogil:
                 Force2[2] = -ForceZ
                 ratio1 = (par2.mass/(par1.mass + par2.mass))
                 ratio2 = (par1.mass/(par1.mass + par2.mass))
+                
+                if par1.state == 3: #dead particle, correct velocity ratio of alive partner
+                    ratio1 = 0
+                    ratio2 = 1
+                elif par2.state == 3:
+                    ratio1 = 1
+                    ratio2 = 0
+
                 par1.vel[0] += Force1[0] * ratio1
                 par1.vel[1] += Force1[1] * ratio1
                 par1.vel[2] += Force1[2] * ratio1
@@ -1181,6 +1189,8 @@ cdef void create_link(int par_id, int max_link, int parothers_id = -1)nogil:
         
     #printdb(714)
     for ii in xrange(neighboursnum):
+        if par.links_activnum >= max_link:
+            break
         #printdb(720)
         if parothers_id == -1:
             par2 = &parlist[neighbours[ii]]
