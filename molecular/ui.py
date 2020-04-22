@@ -1,8 +1,7 @@
-
 import bpy
 
 from . import names
-from .utils import is_blender_28, get_object
+from .utils import get_object
 
 
 class MolecularPanel(bpy.types.Panel):
@@ -227,11 +226,13 @@ class MolecularPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(scn, "frame_start", text="Start Frame")
         row.prop(scn, "frame_end", text="End Frame")
-        #row = layout.row()
-        #row.prop(scn,"mol_timescale_active",text = "Activate TimeScaling")
-        #row = layout.row()
-        #row.enabled = scn.mol_timescale_active
-        #row.prop(scn,"timescale",text = "TimeScale")
+
+        # row = layout.row()
+        # row.prop(scn,"mol_timescale_active", text="Activate TimeScaling")
+        # row = layout.row()
+        # row.enabled = scn.mol_timescale_active
+        # row.prop(scn, "timescale", text="Time Scale")
+
         row = layout.row()
         row.prop(scn, "mol_substep")
         row.label(text='')
@@ -243,10 +244,7 @@ class MolecularPanel(bpy.types.Panel):
         row.prop(scn, "mol_render")
         row = layout.row()
 
-        if is_blender_28():
-            icon = 'PARTICLE_DATA'
-        else:
-            icon = 'RADIO'
+        icon = 'PARTICLE_DATA'
 
         if scn.mol_simrun == False and psys.point_cache.is_baked == False:
             row.enabled = True

@@ -1,38 +1,22 @@
-
-import sys
-import platform
 from time import clock, sleep, strftime, gmtime
 
 import bpy
 from mathutils import Vector
 from mathutils.geometry import barycentric_transform as barycentric
 
-from . import simulate
-from .utils import is_blender_28, get_object, destroy_caches
-
-
-bit_depth = platform.architecture()[0]
-if sys.version_info.major == 3 and sys.version_info.minor == 5 and bit_depth == '64bit':
-    from . import core_35_64 as core
-elif sys.version_info.major == 3 and sys.version_info.minor == 7 and bit_depth == '64bit':
-    from . import core_37_64 as core
-elif sys.version_info.major == 3 and sys.version_info.minor == 5 and bit_depth == '32bit':
-    from . import core_35_32 as core
-elif sys.version_info.major == 3 and sys.version_info.minor == 7 and bit_depth == '32bit':
-    from . import core_37_32 as core
-else:
-    raise BaseException('Unsupported python version')
+from . import simulate, core
+from .utils import get_object, destroy_caches
 
 
 class MolSimulate(bpy.types.Operator):
     bl_idname = "object.mol_simulate"
-    bl_label = "Mol Simulate"
+    bl_label = 'Simulate'
 
     def execute(self, context):
         for ob in bpy.data.objects:
             destroy_caches(ob)
 
-        print("Molecular Sim start--------------------------------------------------")
+        print('Molecular Sim Start' + '-' * 50)
         mol_stime = clock()
         scene = context.scene
         scene.mol_simrun = True
@@ -42,7 +26,6 @@ class MolSimulate(bpy.types.Operator):
         scene.mol_totallink = 0
         scene.mol_totaldeadlink = 0
         scene.mol_timeremain = "...Simulating..."
-        object = context.object
         scene.frame_set(frame=scene.frame_start)
         scene.mol_old_endframe = scene.frame_end
         mol_substep = scene.mol_substep
@@ -51,7 +34,7 @@ class MolSimulate(bpy.types.Operator):
         scene.frame_end *= mol_substep + 1
 
         if scene.mol_timescale_active == True:
-            fps = scene.render.fps / scene.timescale
+            fps = scene.render.fps * scene.timescale
         else:
             fps = scene.render.fps
 
@@ -95,11 +78,11 @@ class MolSetActiveUV(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        
+
         #dont use rotation data here from cache, only for render mode
         psys_orig = context.object.particle_systems.active
         psys_orig.settings.use_rotations = False
-        
+
         obj = get_object(context, context.object)
 
         scene.mol_objuvbake = obj.name
@@ -111,64 +94,45 @@ class MolSetActiveUV(bpy.types.Operator):
         print('  start bake uv from:', obj.name)
 
         obdata = obj.data.copy()
-        object2 = bpy.data.objects.new(name="mol_uv_temp", object_data=obdata)
-        object2.matrix_world = obj.matrix_world
+        obj2 = bpy.data.objects.new(name="mol_uv_temp", object_data=obdata)
+        obj2.matrix_world = obj.matrix_world
 
-        if is_blender_28():
-            context.scene.collection.objects.link(object2)
-        else:
-            context.scene.objects.link(object2)
-        mod = object2.modifiers.new("tri_for_uv", "TRIANGULATE")
+        context.scene.collection.objects.link(obj2)
+        mod = obj2.modifiers.new("tri_for_uv", "TRIANGULATE")
         mod.ngon_method = 'BEAUTY'
         mod.quad_method = 'BEAUTY'
-        if is_blender_28():
-            ctx = bpy.context.copy()
-            ctx["object"] = object2
-            bpy.ops.object.modifier_apply(ctx, modifier=mod.name)
-        else:
-            newmesh = object2.to_mesh(context.scene, True, "RENDER", True, False)
-            object2.data = newmesh
-        
-        if is_blender_28():
-            context.view_layer.update()
-        else:
-            context.scene.update()
+
+        ctx = bpy.context.copy()
+        ctx["object"] = obj2
+        bpy.ops.object.modifier_apply(ctx, modifier=mod.name)
+
+        context.view_layer.update()
             
         psys = obj.particle_systems[scene.mol_psysuvbake]
         par_uv = []
+        me = obj2.data
 
         for par in psys.particles:
 
-            if is_blender_28():
-                parloc = (par.location @ object2.matrix_world) - object2.location
-            else:
-                parloc = (par.location * object2.matrix_world) - object2.location
+            parloc = (par.location @ obj2.matrix_world) - obj2.location
 
-            point = object2.closest_point_on_mesh(parloc)
-            vindex1 = object2.data.polygons[point[3]].vertices[0]
-            vindex2 = object2.data.polygons[point[3]].vertices[1]
-            vindex3 = object2.data.polygons[point[3]].vertices[2]
+            point = obj2.closest_point_on_mesh(parloc)
+            vindex1 = me.polygons[point[3]].vertices[0]
+            vindex2 = me.polygons[point[3]].vertices[1]
+            vindex3 = me.polygons[point[3]].vertices[2]
 
-            if is_blender_28():
-                v1 = (object2.matrix_world @ object2.data.vertices[vindex1].co).to_tuple()
-                v2 = (object2.matrix_world @ object2.data.vertices[vindex2].co).to_tuple()
-                v3 = (object2.matrix_world @ object2.data.vertices[vindex3].co).to_tuple()
-            else:
-                v1 = (object2.matrix_world * object2.data.vertices[vindex1].co).to_tuple()
-                v2 = (object2.matrix_world * object2.data.vertices[vindex2].co).to_tuple()
-                v3 = (object2.matrix_world * object2.data.vertices[vindex3].co).to_tuple()
+            v1 = (obj2.matrix_world @ me.vertices[vindex1].co).to_tuple()
+            v2 = (obj2.matrix_world @ me.vertices[vindex2].co).to_tuple()
+            v3 = (obj2.matrix_world @ me.vertices[vindex3].co).to_tuple()
 
-            uvindex1 = object2.data.polygons[point[3]].loop_start + 0
-            uvindex2 = object2.data.polygons[point[3]].loop_start + 1
-            uvindex3 = object2.data.polygons[point[3]].loop_start + 2
-            uv1 = object2.data.uv_layers.active.data[uvindex1].uv.to_3d()
-            uv2 = object2.data.uv_layers.active.data[uvindex2].uv.to_3d()
-            uv3 = object2.data.uv_layers.active.data[uvindex3].uv.to_3d()
+            uvindex1 = me.polygons[point[3]].loop_start + 0
+            uvindex2 = me.polygons[point[3]].loop_start + 1
+            uvindex3 = me.polygons[point[3]].loop_start + 2
+            uv1 = me.uv_layers.active.data[uvindex1].uv.to_3d()
+            uv2 = me.uv_layers.active.data[uvindex2].uv.to_3d()
+            uv3 = me.uv_layers.active.data[uvindex3].uv.to_3d()
 
-            if is_blender_28():
-                p = object2.matrix_world @ point[1]
-            else:
-                p = object2.matrix_world * point[1]
+            p = obj2.matrix_world @ point[1]
 
             v1 = Vector(v1)
             v2 = Vector(v2)
@@ -178,28 +142,25 @@ class MolSetActiveUV(bpy.types.Operator):
             uv3 = Vector(uv3)
             newuv = barycentric(p, v1, v2, v3, uv1, uv2, uv3)
 
-            if is_blender_28():
-                parloc = par.location @ object2.matrix_world
-            else:
-                parloc = par.location * object2.matrix_world
+            parloc = par.location @ obj2.matrix_world
 
-            dist = (Vector((parloc[0] - p[0], parloc[1] - p[1], parloc[2] - p[2]))).length
+            dist = (Vector((
+                parloc[0] - p[0],
+                parloc[1] - p[1],
+                parloc[2] - p[2]
+            ))).length
+
             newuv[2] = dist
             newuv = newuv.to_tuple()
             par.angular_velocity = newuv
             par_uv.append(newuv)
 
-        if is_blender_28():
-            scene.collection.objects.unlink(object2)
-        else:
-            scene.objects.unlink(object2)
-        bpy.data.objects.remove(object2)
-        if not is_blender_28():
-            bpy.data.meshes.remove(newmesh)
+        scene.collection.objects.unlink(obj2)
+        bpy.data.objects.remove(obj2)
         bpy.data.meshes.remove(obdata)
         print('         uv baked on:', psys.settings.name)
         context.object["par_uv"] = par_uv   
-                  
+
         return {'FINISHED'}
 
 
@@ -214,12 +175,12 @@ class MolSimulateModal(bpy.types.Operator):
             obj = get_object(context, ob)
 
             for psys in obj.particle_systems:
-                
-                 #prepare object as in "open" the cache for angular velocity data
+
+                # prepare object as in "open" the cache for angular velocity data
                 if context.scene.frame_current == context.scene.frame_start:   
                     psys.settings.use_rotations = True
                     psys.settings.angular_velocity_mode = 'RAND'
-                
+
                 if psys.settings.mol_bakeuv and "par_uv" in ob:
                     par_uv = ob["par_uv"]
                     print("Writing UV data...")
@@ -227,7 +188,7 @@ class MolSimulateModal(bpy.types.Operator):
                         par.angular_velocity = par_uv[k]
     
     def check_bake_uv(self, context):
-        #bake the UV in the beginning, and store coordinates in custom property 
+        # bake the UV in the beginning, and store coordinates in custom property 
         for ob in bpy.data.objects:
             obj = get_object(context, ob)
 
@@ -235,19 +196,11 @@ class MolSimulateModal(bpy.types.Operator):
                 if psys.settings.mol_bakeuv:
                     
                     context.scene.mol_objuvbake = obj.name
-                    
-                    if is_blender_28():
-                        context.view_layer.update()
-                    else:
-                        context.scene.update()
-                      
+                    context.view_layer.update()
+
                     context.scene.frame_set(frame=psys.settings.frame_start)
-                     
-                    if is_blender_28():
-                        context.view_layer.update()
-                    else:
-                        context.scene.update()
-                        
+                    context.view_layer.update()
+
                     bpy.ops.object.mol_set_active_uv()
 
     def modal(self, context, event):
@@ -265,13 +218,9 @@ class MolSimulateModal(bpy.types.Operator):
                             bpy.ops.ptcache.bake_from_cache(fake_context)
             scene.render.frame_map_new = 1
             scene.frame_end = scene.mol_old_endframe
-            
-            if is_blender_28():
-                context.view_layer.update()
-            else:
-                context.scene.update()
-                
-            #self.check_bake_uv(context)
+            context.view_layer.update()
+
+            # self.check_bake_uv(context)
 
             if frame_current == frame_end and scene.mol_render:
                 bpy.ops.render.render(animation=True)
@@ -282,7 +231,7 @@ class MolSimulateModal(bpy.types.Operator):
             scene.mol_simrun = False
             mol_exportdata = scene.mol_exportdata
             mol_exportdata.clear()
-            print("--------------------------------------------------Molecular Sim end")
+            print('-' * 50 + 'Molecular Sim end')
             return self.cancel(context)
 
         if event.type == 'TIMER':

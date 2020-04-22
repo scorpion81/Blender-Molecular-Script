@@ -1,4 +1,3 @@
-
 # Labels text
 DENSITY = 'Density:'
 COLLISION = 'Collision:'

@@ -17,16 +17,21 @@
 #======================= END GPL LICENSE BLOCK ========================
 
 bl_info = {
-    "name": "Molecular script",
-    "author": "Jean-Francois Gallant(PyroEvil), Pavel_Blend, Martin Felke(scorpion81)",
+    "name": "Molecular",
+    "author":
+        "Jean-Francois Gallant (PyroEvil), "
+        "Pavel_Blend, "
+        "Martin Felke (scorpion81)",
     "version": (1, 1, 0),
     "blender": (2, 80, 0),
     "location": "Properties editor > Particles Tabs",
-    "description": ("Molecular script"),
+    "description":
+        "Addon for calculating collisions "
+        "and for creating links between particles",
     "warning": "",  # used for warning icon and text in addons panel
     "wiki_url": "http://pyroevil.com/molecular-script-docs/",
     "tracker_url": "http://pyroevil.com/contact/" ,
-    "category": "Object"
+    "category": "Physics"
 }
 
 
@@ -34,9 +39,7 @@ def register():
 
     import bpy
 
-    from . import properties
-    from . import ui
-    from . import operators
+    from . import properties, ui, operators
 
     properties.define_props()
     bpy.utils.register_class(operators.MolSimulateModal)
@@ -50,9 +53,7 @@ def unregister():
 
     import bpy
 
-    from . import properties
-    from . import ui
-    from . import operators
+    from . import properties, ui, operators
 
     bpy.utils.unregister_class(operators.MolSimulateModal)
     bpy.utils.unregister_class(operators.MolSimulate)

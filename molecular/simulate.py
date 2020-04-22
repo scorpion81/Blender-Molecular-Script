@@ -1,9 +1,8 @@
-
 import math
 
 import bpy
 
-from .utils import is_blender_28, get_object
+from .utils import get_object
 
 
 def pack_data(context, initiate):
