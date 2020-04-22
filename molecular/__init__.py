@@ -46,7 +46,8 @@ def register():
     bpy.utils.register_class(operators.MolSimulate)
     bpy.utils.register_class(operators.MolSetGlobalUV)
     bpy.utils.register_class(operators.MolSetActiveUV)
-    bpy.utils.register_class(ui.MolecularPanel)
+    for panel in ui.panel_classes:
+        bpy.utils.register_class(panel)
 
 
 def unregister():
@@ -59,7 +60,8 @@ def unregister():
     bpy.utils.unregister_class(operators.MolSimulate)
     bpy.utils.unregister_class(operators.MolSetGlobalUV)
     bpy.utils.unregister_class(operators.MolSetActiveUV)
-    bpy.utils.unregister_class(ui.MolecularPanel)
+    for panel in reversed(ui.panel_classes):
+        bpy.utils.unregister_class(panel)
 
 
 if __name__ == "__main__":

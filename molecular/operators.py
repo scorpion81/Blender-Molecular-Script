@@ -208,7 +208,7 @@ class MolSimulateModal(bpy.types.Operator):
         frame_end = scene.frame_end
         frame_current = scene.frame_current
         if event.type == 'ESC' or frame_current == frame_end:
-            if frame_current == frame_end and scene.mol_bake:
+            if scene.mol_bake:
                 fake_context = context.copy()
                 for ob in bpy.data.objects:
                     obj = get_object(context, ob)
@@ -285,7 +285,6 @@ class MolSimulateModal(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def execute(self, context):
-    
         self.check_bake_uv(context)
         self._timer = context.window_manager.event_timer_add(0.000000001, window=context.window)
         context.window_manager.modal_handler_add(self)
