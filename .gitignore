@@ -4,3 +4,4 @@ build
 *.c
 *.html
 .vscode
+*.zip
