@@ -211,19 +211,24 @@ class MolSimulateModal(bpy.types.Operator):
     
     def check_bake_uv(self, context):
         # bake the UV in the beginning, and store coordinates in custom property 
+        scene = context.scene
+        frame_old = scene.frame_current
+
         for ob in bpy.data.objects:
             obj = get_object(context, ob)
 
             for psys in obj.particle_systems:
                 if psys.settings.mol_bakeuv:
                     
-                    context.scene.mol_objuvbake = obj.name
+                    scene.mol_objuvbake = obj.name
                     context.view_layer.update()
 
-                    context.scene.frame_set(frame=psys.settings.frame_start)
+                    scene.frame_set(frame=psys.settings.frame_start)
                     context.view_layer.update()
 
                     bpy.ops.object.mol_set_active_uv()
+
+        scene.frame_set(frame=frame_old)
 
     def modal(self, context, event):
         scene = context.scene
