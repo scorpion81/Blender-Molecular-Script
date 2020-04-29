@@ -1,4 +1,4 @@
-from time import clock, sleep, strftime, gmtime
+from time import clock, sleep, strftime, gmtime, time
 
 import bpy
 from mathutils import Vector
@@ -164,6 +164,28 @@ class MolSetActiveUV(bpy.types.Operator):
         return {'FINISHED'}
 
 
+def convert_time_to_string(total_time):
+    HOUR_IN_SECONDS = 60 * 60
+    MINUTE_IN_SCEONDS = 60
+    time_string = ''
+    if total_time > 10.0:
+        total_time = int(total_time)
+        if total_time > MINUTE_IN_SCEONDS and total_time <= HOUR_IN_SECONDS:
+            minutes = total_time // MINUTE_IN_SCEONDS
+            seconds = total_time - minutes * MINUTE_IN_SCEONDS
+            time_string = '{0} min {1} sec'.format(minutes, seconds)
+        elif total_time <= MINUTE_IN_SCEONDS:
+            time_string = '{0} seconds'.format(total_time)
+        elif total_time > HOUR_IN_SECONDS:
+            hours = total_time // HOUR_IN_SECONDS
+            minutes = total_time - (total_time // HOUR_IN_SECONDS) * HOUR_IN_SECONDS
+            time_string = '{0} hours {1} min'.format(hours, minutes)
+    else:
+        seconds = round(total_time, 2)
+        time_string = '{0} seconds'.format(seconds)
+    return time_string
+
+
 class MolSimulateModal(bpy.types.Operator):
     """Operator which runs its self from a timer"""
     bl_idname = "wm.mol_simulate_modal"
@@ -232,6 +254,11 @@ class MolSimulateModal(bpy.types.Operator):
             mol_exportdata = scene.mol_exportdata
             mol_exportdata.clear()
             print('-' * 50 + 'Molecular Sim end')
+            # total time
+            tt = time() - self.st
+            # total time string
+            tt_s = convert_time_to_string(tt)
+            self.report({'INFO'}, 'Total time: {0}'.format(tt_s))
             return self.cancel(context)
 
         if event.type == 'TIMER':
@@ -285,6 +312,8 @@ class MolSimulateModal(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def execute(self, context):
+        # start time
+        self.st = time()
         self.check_bake_uv(context)
         self._timer = context.window_manager.event_timer_add(0.000000001, window=context.window)
         context.window_manager.modal_handler_add(self)
