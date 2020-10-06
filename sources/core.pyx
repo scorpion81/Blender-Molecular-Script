@@ -7,7 +7,7 @@
 
 
 cimport cython
-from time import clock
+from time import perf_counter as clock
 from cython.parallel import parallel, prange, threadid
 from libc.stdlib cimport malloc, realloc, free, rand, srand, abs
 
