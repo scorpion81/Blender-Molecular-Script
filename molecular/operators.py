@@ -1,4 +1,4 @@
-from time import clock, sleep, strftime, gmtime, time
+from time import perf_counter as clock, sleep, strftime, gmtime, time
 
 import bpy
 from mathutils import Vector
