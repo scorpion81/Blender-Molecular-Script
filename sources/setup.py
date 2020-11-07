@@ -8,8 +8,7 @@ os_name = platform.architecture()[1]
 Cython.Compiler.Options.annotate = True
 PYX = '.pyx'
 source_dir = os.path.dirname(os.path.abspath(__file__))
-repo_dir = os.path.dirname(source_dir)
-addon_folder = os.path.join(repo_dir, 'molecular')
+addon_folder = os.path.join(os.path.dirname(source_dir), 'molecular', 'core')
 ext_modules = []
 
 for root, dirs, files in os.walk('.'):
@@ -36,9 +35,10 @@ for root, dirs, files in os.walk('.'):
                 ))
 
 setup(
-    name = 'Molecular',
-    cmdclass = {'build_ext': build_ext},
-    ext_modules = ext_modules
+    name='Molecular',
+    cmdclass={'build_ext': build_ext},
+    include_dirs=['.'],
+    ext_modules=ext_modules
 )
 
 for root, dirs, files in os.walk('.'):
@@ -46,7 +46,7 @@ for root, dirs, files in os.walk('.'):
         module_name, extension = os.path.splitext(file)
         module_name = module_name.lower()
         extension = extension.lower()
-        if not extension in ('.pyx', '.pyd', '.py', '.bat'):
+        if not extension in ('.pyx', '.pyd', '.pxd', '.py', '.bat'):
             os.remove(os.path.join(root, file))
 
 shutil.rmtree('build')
