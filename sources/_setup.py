@@ -51,6 +51,14 @@ for root, dirs, files in os.walk('.'):
 
 shutil.rmtree('build')
 
+addon_path = os.environ.get('BLENDER_USER_ADDON_PATH', None)
+if addon_path:
+    if addon_path[:-1] == '/':
+        addon_path = addon_path[:-1]
+    if not addon_path.endswith(os.path.join('scripts', 'addons')):
+        raise BaseException('Incorrect addons path')
+core_folder = os.path.join(addon_path, 'molecular', 'core')
+
 for root, dirs, files in os.walk('.'):
     for file in files:
         module_name, extension = os.path.splitext(file)
@@ -60,6 +68,12 @@ for root, dirs, files in os.walk('.'):
         if os.path.exists(pyd_file_path):
             os.remove(pyd_file_path)
         if extension == '.pyd':
+            if addon_path:
+                print('#', os.path.join(core_folder, file))
+                shutil.copyfile(
+                    os.path.join(root, file),
+                    os.path.join(core_folder, file)
+                )
             os.rename(
                 os.path.join(root, file),
                 pyd_file_path
