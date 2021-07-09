@@ -1,4 +1,4 @@
-![Molecular Addon for Blender](https://github.com/scorpion81/Blender-Molecular-Script/workflows/Molecular%20Addon%20for%20Blender/badge.svg)
+![Molecular Addon for Blender](https://github.com/3D-WORLD-UK/Blender-Molecular-Script/workflows/Molecular%20Addon%20for%20Blender/badge.svg)
 
 Blender-Molecular-Script
 ========================
