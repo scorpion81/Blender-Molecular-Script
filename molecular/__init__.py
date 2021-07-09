@@ -22,14 +22,15 @@ bl_info = {
         "Jean-Francois Gallant (PyroEvil), "
         "Pavel_Blend, "
         "Martin Felke (scorpion81)",
-    "version": (1, 1, 2),
-    "blender": (2, 80, 0),
+        "Ben Knowles (3enny3oy / 3D-World-UK)
+    "version": (1, 1, 3),
+    "blender": (2, 93, 0),
     "location": "Properties editor > Particles Tabs",
     "description":
         "Addon for calculating collisions "
         "and for creating links between particles",
     "warning": "",  # used for warning icon and text in addons panel
-    "wiki_url": "http://pyroevil.com/molecular-script-docs/",
+    "wiki_url": "https://github.com/3D-World-UK/Blender-Molecular-Script/wiki/Molecular-Script-Documentation",
     "tracker_url": "http://pyroevil.com/contact/" ,
     "category": "Physics"
 }
