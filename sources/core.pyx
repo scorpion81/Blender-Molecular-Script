@@ -11,7 +11,6 @@ from time import perf_counter as clock
 from cython.parallel import parallel, prange, threadid
 from libc.stdlib cimport malloc, realloc, free, rand, srand, abs
 
-
 cdef extern from *:
     int INT_MAX
     float FLT_MAX
@@ -41,8 +40,9 @@ cdef Particle *parlist = NULL
 cdef SParticle *parlistcopy = NULL
 cdef ParSys *psys = NULL
 cdef KDTree *kdtree = NULL
-print("cmolcore imported with success! v1.12")
+cdef int framecurrent = 0
 
+print("cmolcore imported with success! v1.12")
 
 cpdef init(importdata):
     global fps
@@ -254,7 +254,7 @@ cdef testkdtree(int verbose = 0):
     free(b)
 
 
-cpdef simulate(importdata):
+cpdef simulate(importdata, frame_current):
     global kdtree
     global parlist
     global parlistcopy
@@ -267,6 +267,9 @@ cpdef simulate(importdata):
     global totallinks
     global totaldeadlinks
     global deadlinks
+    global framecurrent
+
+    framecurrent = frame_current
 
     cdef int i = 0
     cdef int ii = 0
@@ -1352,6 +1355,7 @@ cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     global parlist
     global parnum
     global newlinks
+    global framecurrent
     cdef Links *link = <Links *>malloc(1 * cython.sizeof(Links))
     cdef int *neighbours = NULL
     cdef int ii = 0
@@ -1371,6 +1375,8 @@ cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     fakepar = <Particle *>malloc(1 * cython.sizeof(Particle))
     par = &parlist[par_id]
 
+    if framecurrent < 50:
+        return
     if  par.state >= 2:
         return
     if par.links_activnum >= max_link:

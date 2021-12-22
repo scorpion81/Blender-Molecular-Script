@@ -272,7 +272,7 @@ class MolSimulateModal(bpy.types.Operator):
             mol_exportdata = context.scene.mol_exportdata
             mol_exportdata.clear()
             simulate.pack_data(context, False)
-            mol_importdata = core.simulate(mol_exportdata)
+            mol_importdata = core.simulate(mol_exportdata, frame_current)
 
             i = 0
             for ob in bpy.data.objects:
