@@ -10,6 +10,7 @@ cimport cython
 from time import perf_counter as clock
 from cython.parallel import parallel, prange, threadid
 from libc.stdlib cimport malloc, realloc, free, rand, srand, abs
+from libc.stdio cimport printf
 
 cdef extern from *:
     int INT_MAX
@@ -40,9 +41,9 @@ cdef Particle *parlist = NULL
 cdef SParticle *parlistcopy = NULL
 cdef ParSys *psys = NULL
 cdef KDTree *kdtree = NULL
-cdef int framecurrent = 0
+cdef int currentframe = 0
 
-print("cmolcore imported with success! v1.12")
+print("cmolcore imported with success! v1.13")
 
 cpdef init(importdata):
     global fps
@@ -59,9 +60,11 @@ cpdef init(importdata):
     global totallinks
     global totaldeadlinks
     global deadlinks
+    global currentframe
     cdef int i = 0
     cdef int ii = 0
     cdef int profiling = 0
+    currentframe = 0
     newlinks = 0
     totallinks = 0
     totaldeadlinks = 0
@@ -253,8 +256,7 @@ cdef testkdtree(int verbose = 0):
         print("number of particle find:", b[0].neighboursnum)
     free(b)
 
-
-cpdef simulate(importdata, frame_current):
+cpdef simulate(importdata):
     global kdtree
     global parlist
     global parlistcopy
@@ -267,9 +269,9 @@ cpdef simulate(importdata, frame_current):
     global totallinks
     global totaldeadlinks
     global deadlinks
-    global framecurrent
+    global currentframe
 
-    framecurrent = frame_current
+    currentframe += 1
 
     cdef int i = 0
     cdef int ii = 0
@@ -1349,13 +1351,28 @@ cdef void KDTree_rnn_search(
                 depth + 1
             )
 
+cdef void remove_link(Particle *par)nogil:
+    par.links = <Links *>malloc(1 * cython.sizeof(Links))
+    par.links_num = 0
+    par.links_activnum = 0
+    par.link_with = <int *>malloc(1 * cython.sizeof(int))
+    par.link_withnum = 0
+
+cdef void remove_link_all()nogil:
+    global psysnum
+    global psys
+    cdef int jj = 0
+    for i in xrange(psysnum):
+        for ii in xrange(psys[i].parnum):
+            remove_link(&parlist[jj])
+            jj += 1
 
 cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     global kdtree
     global parlist
     global parnum
     global newlinks
-    global framecurrent
+    global currentframe
     cdef Links *link = <Links *>malloc(1 * cython.sizeof(Links))
     cdef int *neighbours = NULL
     cdef int ii = 0
@@ -1375,9 +1392,12 @@ cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     fakepar = <Particle *>malloc(1 * cython.sizeof(Particle))
     par = &parlist[par_id]
 
-    if framecurrent < 50:
+    if currentframe > 250:
         return
-    if  par.state >= 2:
+    if currentframe == 250:
+        remove_link_all()
+
+    if par.state >= 2:
         return
     if par.links_activnum >= max_link:
         return

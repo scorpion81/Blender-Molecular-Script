@@ -267,12 +267,15 @@ class MolSimulateModal(bpy.types.Operator):
             return self.cancel(context)
 
         if event.type == 'TIMER':
+            mol_substep = scene.mol_substep
+            framesubstep = frame_current / (mol_substep + 1)   
             if frame_current == scene.frame_start:            
                 scene.mol_stime = clock()
             mol_exportdata = context.scene.mol_exportdata
             mol_exportdata.clear()
             simulate.pack_data(context, False)
-            mol_importdata = core.simulate(mol_exportdata, frame_current)
+            mol_importdata = core.simulate(mol_exportdata)
+            print("frame current: ", frame_current)
 
             i = 0
             for ob in bpy.data.objects:
@@ -282,9 +285,7 @@ class MolSimulateModal(bpy.types.Operator):
                     if psys.settings.mol_active and len(psys.particles):
                         psys.particles.foreach_set('velocity', mol_importdata[1][i])
                         i += 1
-
-            mol_substep = scene.mol_substep
-            framesubstep = frame_current / (mol_substep + 1)        
+     
             if framesubstep == int(framesubstep):
                 etime = clock()
                 print("    frame " + str(framesubstep + 1) + ":")
