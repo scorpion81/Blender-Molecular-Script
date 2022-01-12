@@ -1392,6 +1392,7 @@ cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     fakepar = <Particle *>malloc(1 * cython.sizeof(Particle))
     par = &parlist[par_id]
 
+    #demo: try to remove all rink at frame 250/5 
     if currentframe > 250:
         return
     if currentframe == 250:
