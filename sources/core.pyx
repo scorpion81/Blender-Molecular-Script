@@ -157,6 +157,8 @@ cpdef init(importdata):
             parlist[jj].neighbours = <int *>malloc(parlist[jj].neighboursmax * \
                 cython.sizeof(int))
             parlist[jj].neighboursnum = 0
+            parlist[jj].is_border = False
+            parlist[jj].is_virtal_water = False
             jj += 1
 
     jj = 0
@@ -209,6 +211,11 @@ cpdef init(importdata):
                     parlist[i].loc,
                     parlist[i].sys.link_length
                 )
+
+                with gil:
+                    print(i, parlist[i].neighboursnum)
+                if parlist[i].neighboursnum <= 10:
+                    parlist[i].is_border = True
 
     for i in xrange(parnum):
         create_link(parlist[i].id, parlist[i].sys.link_max)
@@ -492,15 +499,16 @@ cpdef simulate(importdata):
                             parPool[0].parity[pair].heap[heaps].par[i]
                         ].neighboursnum = 0
 
-    '''
+    
     with nogil:
         for i in xrange(parnum):
             collide(&parlist[i])
             solve_link(&parlist[i])
+            '''
             if parlist[i].neighboursnum > 1:
                 #free(parlist[i].neighbours)
                 parlist[i].neighboursnum = 0
-    '''
+            '''
 
     if profiling == 1:
         print("-->collide/solve link time", clock() - stime, "sec")
@@ -1352,11 +1360,17 @@ cdef void KDTree_rnn_search(
             )
 
 cdef void remove_link(Particle *par)nogil:
-    par.links = <Links *>malloc(1 * cython.sizeof(Links))
-    par.links_num = 0
-    par.links_activnum = 0
-    par.link_with = <int *>malloc(1 * cython.sizeof(int))
-    par.link_withnum = 0
+    global parlist
+    if not par.is_virtal_water and par.is_border:
+        par.links = <Links *>malloc(1 * cython.sizeof(Links))
+        par.links_num = 0
+        par.links_activnum = 0
+        par.link_with = <int *>malloc(1 * cython.sizeof(int))
+        par.link_withnum = 0
+        par.is_virtal_water = True
+        for x in range(par.neighboursnum):
+            if not parlist[par.neighbours[x]].is_border:
+                parlist[par.neighbours[x]].is_border = True
 
 cdef void remove_link_all()nogil:
     global psysnum
@@ -1393,10 +1407,15 @@ cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     par = &parlist[par_id]
 
     #demo: try to remove all rink at frame 250/5 
-    if currentframe > 250:
+    cdef float curretframedevidesubstep = currentframe/substep
+    cdef int intcurretframedevidesubstep = int(curretframedevidesubstep)
+    if currentframe >= 250:
+        if curretframedevidesubstep == intcurretframedevidesubstep:
+            remove_link(par)
+            return
+
+    if currentframe >= 250:
         return
-    if currentframe == 250:
-        remove_link_all()
 
     if par.state >= 2:
         return
@@ -1650,6 +1669,8 @@ cdef struct Particle:
     int *neighbours
     int neighboursnum
     int neighboursmax
+    int is_border #ice metling: use for define particle that use for tranform to virtal water
+    int is_virtal_water 
 
 
 cdef struct Pool:
