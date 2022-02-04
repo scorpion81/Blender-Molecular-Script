@@ -878,6 +878,7 @@ cdef void solve_link(Particle *par)nogil:
     global parlist
     global deltatime
     global deadlinks
+    global currentframe
     cdef int i = 0
     cdef float stiff = 0
     cdef float damping = 0
@@ -918,6 +919,11 @@ cdef void solve_link(Particle *par)nogil:
     cdef float *xpar1_vel = [0, 0, 0]
     cdef float *ypar2_vel = [0, 0, 0]
     cdef float *xpar2_vel = [0, 0, 0]
+
+    cdef float curretframedevidesubstep = currentframe/substep
+    cdef int intcurretframedevidesubstep = int(curretframedevidesubstep)
+
+
     # broken_links = []
     if  par.state >= 2:
         return
@@ -1362,15 +1368,29 @@ cdef void KDTree_rnn_search(
 cdef void remove_link(Particle *par)nogil:
     global parlist
     if not par.is_virtal_water and par.is_border:
+        with gil:
+            print(par.id)
         par.links = <Links *>malloc(1 * cython.sizeof(Links))
         par.links_num = 0
         par.links_activnum = 0
         par.link_with = <int *>malloc(1 * cython.sizeof(int))
         par.link_withnum = 0
         par.is_virtal_water = True
+        #par.vel[2] -= 10 // test add gravity force
         for x in range(par.neighboursnum):
             if not parlist[par.neighbours[x]].is_border:
                 parlist[par.neighbours[x]].is_border = True
+                
+                parsearch = arraysearch(
+                    par.neighbours[x],
+                    parlist[par.neighbours[x]].link_with,
+                    parlist[par.neighbours[x]].link_withnum
+                )
+
+                if parsearch != -1:
+                    parlist[par.neighbours[x]].link_with[parsearch] = -1
+
+                par.is_virtal_water = True
 
 cdef void remove_link_all()nogil:
     global psysnum
@@ -1416,7 +1436,7 @@ cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
 
     if currentframe >= 250:
         return
-
+    
     if par.state >= 2:
         return
     if par.links_activnum >= max_link:
