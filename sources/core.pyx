@@ -1376,7 +1376,7 @@ cdef void remove_link(Particle *par)nogil:
         par.link_with = <int *>malloc(1 * cython.sizeof(int))
         par.link_withnum = 0
         par.is_virtal_water = True
-        #par.vel[2] -= 10 // test add gravity force
+        par.vel[2] = 0 # test add gravity force
         for x in range(par.neighboursnum):
             if not parlist[par.neighbours[x]].is_border:
                 parlist[par.neighbours[x]].is_border = True
