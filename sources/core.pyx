@@ -42,7 +42,7 @@ cdef SParticle *parlistcopy = NULL
 cdef ParSys *psys = NULL
 cdef KDTree *kdtree = NULL
 cdef int currentframe = 0
-cdef int countremovelink = 0
+cdef int neighbours_border_num = 10
 
 print("cmolcore imported with success! v1.13")
 
@@ -62,6 +62,7 @@ cpdef init(importdata):
     global totaldeadlinks
     global deadlinks
     global currentframe
+    global neighbours_border_num
     cdef int i = 0
     cdef int ii = 0
     cdef int profiling = 0
@@ -215,7 +216,7 @@ cpdef init(importdata):
 
                 with gil:
                     print(i, parlist[i].neighboursnum)
-                if parlist[i].neighboursnum <= 14:
+                if parlist[i].neighboursnum <= neighbours_border_num:
                     parlist[i].is_border = True
 
     for i in xrange(parnum):
@@ -560,8 +561,8 @@ cpdef simulate(importdata):
     if profiling == 1:
         print("-->export time", clock() - stime, "sec")
         print("-->all process time", clock() - stime2, "sec")
+        
     return exportdata
-
 
 cpdef memfree():
     global kdtree
@@ -881,7 +882,6 @@ cdef void solve_link(Particle *par)nogil:
     global deadlinks
     global substep
     global currentframe
-    global countremovelink
     cdef int i = 0
     cdef float stiff = 0
     cdef float damping = 0
@@ -927,9 +927,8 @@ cdef void solve_link(Particle *par)nogil:
     cdef float curretframedevidesubstep = currentframe/substep
     cdef int intcurretframedevidesubstep = int(curretframedevidesubstep)
     if currentframe >= 250:
-        if curretframedevidesubstep == intcurretframedevidesubstep and intcurretframedevidesubstep % 5 == 0:
+        if curretframedevidesubstep == intcurretframedevidesubstep and intcurretframedevidesubstep % 50 == 0:
             remove_link(par)
-            countremovelink = 0
 
     # broken_links = []
     if  par.state >= 2:
@@ -1374,34 +1373,33 @@ cdef void KDTree_rnn_search(
 
 cdef void remove_link(Particle *par)nogil:
     global parlist
-    global countremovelink
-    if not par.is_virtal_water and par.is_border:
-        #with gil:
-        #    print(par.id)
-        par.links = <Links *>malloc(1 * cython.sizeof(Links))
-        par.links_num = 0
-        par.links_activnum = 0
-        par.link_with = <int *>malloc(1 * cython.sizeof(int))
-        par.link_withnum = 0
-        par.is_virtal_water = True
-        #par.vel[2] = 0 # test add gravity force
-        for x in range(par.neighboursnum):
-            if not parlist[par.neighbours[x]].is_border:
-                parlist[par.neighbours[x]].is_border = True
-                
-                parsearch = arraysearch(
-                    par.neighbours[x],
-                    parlist[par.neighbours[x]].link_with,
-                    parlist[par.neighbours[x]].link_withnum
-                )
+    if not par.is_virtal_water:
+        if par.is_border or par.neighboursnum <= neighbours_border_num:
+            #with gil:
+            #    print(par.id)
+            par.links = <Links *>malloc(1 * cython.sizeof(Links))
+            par.links_num = 0
+            par.links_activnum = 0
+            par.link_with = <int *>malloc(1 * cython.sizeof(int))
+            par.link_withnum = 0
+            par.is_virtal_water = True
+            #par.vel[2] = 0 # test add gravity force
+            for x in range(par.neighboursnum):
+                if not parlist[par.neighbours[x]].is_border:
+                    parlist[par.neighbours[x]].is_border = True
+                    
+                    parsearch = arraysearch(
+                        par.neighbours[x],
+                        parlist[par.neighbours[x]].link_with,
+                        parlist[par.neighbours[x]].link_withnum
+                    )
 
-                if parsearch != -1:
-                    parlist[par.neighbours[x]].link_with[parsearch] = -1
+                    if parsearch != -1:
+                        parlist[par.neighbours[x]].link_with[parsearch] = -1
 
-                par.is_virtal_water = True
-                countremovelink += 1
-                with gil:
-                    print("------------------------------------------------------------")
+                    par.is_virtal_water = True
+                    with gil:
+                        print("-----------------------------------------")
 
 cdef void remove_link_all()nogil:
     global psysnum
