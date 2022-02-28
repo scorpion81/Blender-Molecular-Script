@@ -24,6 +24,7 @@ make_release.py               ใช้รันสำหรับสร้า�
 - create_link(int par_id, int max_link, int parothers_id=-1) สร้าง link ระหว่าง particle
 - solve_link(Particle *par) - คำนวณค่า particle ใน link
 - collide(Particle *par) - คำนวณค่า self-collision ระหว่าง particle
+- KDTree_rnn_search - neighbor search
 
 ---------
 ฟังก์ชันที่ถูกสร้างเพิ่มเติมขึ้นมา
