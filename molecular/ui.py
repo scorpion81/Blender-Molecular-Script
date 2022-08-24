@@ -361,6 +361,9 @@ class MolecularToolsPanel(MolecularBasePanel):
                 text="Set Active UV (no uvs found)"
             )
 
+        row = box.row()
+        row.operator("object.mol_convert_to_particle_instance_mesh")
+
         box = layout.box()
         row = box.row()
         row.label(text=names.SUBSTEPS_CALCULATOR)

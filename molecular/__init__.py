@@ -22,7 +22,7 @@ bl_info = {
         "Jean-Francois Gallant (PyroEvil), "
         "Pavel_Blend, "
         "Martin Felke (scorpion81)",
-    "version": (1, 1, 4),
+    "version": (1, 1, 5),
     "blender": (3, 0, 0),
     "location": "Properties editor > Particles Tabs",
     "description":
@@ -39,23 +39,49 @@ def register():
 
     import bpy
 
-    from . import properties, ui, operators
+    import nodeitems_utils
+    from nodeitems_utils import NodeCategory, NodeItem
+    from . import properties, ui, operators, uv_node
 
     properties.define_props()
+    bpy.utils.register_class(uv_node.UVNode)
     bpy.utils.register_class(operators.MolSimulateModal)
     bpy.utils.register_class(operators.MolSimulate)
     bpy.utils.register_class(operators.MolSetGlobalUV)
     bpy.utils.register_class(operators.MolSetActiveUV)
+    bpy.utils.register_class(operators.MolConvertToParticleInstanceMesh)
     for panel in ui.panel_classes:
         bpy.utils.register_class(panel)
+
+    
+    class UVNodeCategory(NodeCategory):
+        @classmethod
+        def poll(cls, context):
+            return context.space_data.tree_type == 'ShaderNodeTree'
+
+
+    # all categories in a list
+    node_categories = [
+        # identifier, label, items list
+        UVNodeCategory('UV_NODES', "UV Nodes", items=[
+            # our basic node
+            NodeItem("UVNode"),
+        ]),
+    ]
+
+    nodeitems_utils.register_node_categories('UV_NODES', node_categories)
 
 
 def unregister():
 
     import bpy
+    
+    import nodeitems_utils
+    from . import properties, ui, operators, uv_node
 
-    from . import properties, ui, operators
-
+    nodeitems_utils.unregister_node_categories('UV_NODES')
+    bpy.utils.unregister_class(uv_node.UVNode)
+    bpy.utils.unregister_class(operators.MolConvertToParticleInstanceMesh)
     bpy.utils.unregister_class(operators.MolSimulateModal)
     bpy.utils.unregister_class(operators.MolSimulate)
     bpy.utils.unregister_class(operators.MolSetGlobalUV)
@@ -66,3 +92,4 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+   

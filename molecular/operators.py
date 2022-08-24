@@ -328,4 +328,54 @@ class MolSimulateModal(bpy.types.Operator):
 
     def cancel(self, context):
         context.window_manager.event_timer_remove(self._timer)
-        return {'CANCELLED'}   
+        return {'CANCELLED'}
+
+
+class MolConvertToParticleInstanceMesh(bpy.types.Operator):
+    bl_idname = "object.mol_convert_to_particle_instance_mesh"
+    bl_label = "Mol Convert To Mesh"
+
+    def execute(self, context):
+        #on obj, set rendering to halo first, otherwise we get particle instances with instances
+        scene = context.scene
+        obj = get_object(context, context.object)
+
+        psys = obj.particle_systems.active
+        
+        obb = psys.settings.instance_object
+        o = bpy.data.objects[obb.name]
+        psys.settings.render_type = 'HALO'
+        o.matrix_world = obj.matrix_world
+        md = o.modifiers.new("part_instance", "PARTICLE_INSTANCE")
+        md.object = obj
+        md.use_size = True
+
+        for f in range(scene.frame_start, scene.frame_start+1):
+            obj2 = bpy.data.objects.new(name="mol_convert_temp", object_data=o.data)
+            obj2.matrix_world = obj.matrix_world
+
+            ctx = bpy.context.copy()
+            ctx["object"] = obj2
+            bpy.ops.object.modifier_apply(ctx, modifier=md.name)
+            
+            #triangulate
+            mod = obj2.modifiers.new("tri_for__convert", "TRIANGULATE")
+            mod.ngon_method = 'BEAUTY'
+            mod.quad_method = 'BEAUTY'
+            ctx = bpy.context.copy()
+            ctx["object"] = obj2
+            bpy.ops.object.modifier_apply(ctx, modifier=mod.name)
+
+            uv = obj2.data.uv_layers.new(name='ParticleUV', do_init=True)
+
+            d = bpy.context.evaluated_depsgraph_get()
+            ob = obj.evaluated_get(d)
+            for i, p in enumerate(ob.particle_systems.active.particles):
+                uv.data[i].uv[0] = p.angular_velocity[0]
+                uv.data[i].uv[1] = p.angular_velocity[1]
+
+            #context.scene.collection.objects.link(obj2)
+            #context.view_layer.update()
+            scene.frame_set(f)
+
+        return {'FINISHED'}   
