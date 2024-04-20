@@ -106,7 +106,8 @@ class MolSetActiveUV(bpy.types.Operator):
 
         ctx = bpy.context.copy()
         ctx["object"] = obj2
-        bpy.ops.object.modifier_apply(ctx, modifier=mod.name)
+        with context.temp_override(**ctx):
+            bpy.ops.object.modifier_apply(modifier=mod.name)
 
         context.view_layer.update()
             
@@ -244,7 +245,8 @@ class MolSimulateModal(bpy.types.Operator):
                     for psys in obj.particle_systems:
                         if psys.settings.mol_active and len(psys.particles):
                             fake_context["point_cache"] = psys.point_cache
-                            bpy.ops.ptcache.bake_from_cache(fake_context)
+                            with context.temp_override(**fake_context):
+                                bpy.ops.ptcache.bake_from_cache()
             scene.render.frame_map_new = 1
             scene.frame_end = scene.mol_old_endframe
             context.view_layer.update()
