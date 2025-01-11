@@ -22,8 +22,8 @@ bl_info = {
         "Jean-Francois Gallant (PyroEvil), "
         "Pavel_Blend, "
         "Martin Felke (scorpion81)",
-    "version": (1, 1, 5),
-    "blender": (4, 1, 0),
+    "version": (1, 1, 6),
+    "blender": (4, 3, 2),
     "location": "Properties editor > Particles Tabs",
     "description":
         "Addon for calculating collisions "
