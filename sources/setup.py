@@ -14,7 +14,8 @@ if os_name == "WindowsPE":
         module_name,
         ['core' + '.pyx'],
         extra_compile_args=['/Ox','/openmp','/GT','/arch:SSE2','/fp:fast'],
-        cython_directives={'language_level' : "3"}
+        cython_directives={'language_level' : "3"},
+        compiler_directives={'cpow': True},
     )]
 elif is_linux:
      ext_modules = [Extension(
@@ -22,7 +23,8 @@ elif is_linux:
         ['core' + '.pyx'],
         extra_compile_args=['-O3','-msse4.2','-ffast-math','-fno-builtin'],
         extra_link_args=['-lm'],
-        cython_directives={'language_level' : "3"}
+        cython_directives={'language_level' : "3"},
+        compiler_directives={'cpow': True},
     )]
 else:
     # under mac OS, with the advent of the M1 ARM chips, its necessary to build an universal intel/arm binary.
@@ -33,7 +35,8 @@ else:
         ['core' + '.pyx'],
         extra_compile_args=['-O3','-msse4.2','-ffast-math','-fno-builtin','-arch','arm64e','-arch','x86_64','-arch','arm64'],
         extra_link_args=['-lm','-arch','arm64e','-arch','x86_64','-arch','arm64'],
-        cython_directives={'language_level' : "3"}
+        cython_directives={'language_level' : "3"},
+        compiler_directives={'cpow': True},
     )]
 
 setup(
