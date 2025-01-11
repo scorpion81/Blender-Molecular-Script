@@ -10,7 +10,6 @@ cimport cython
 from time import perf_counter as clock
 from cython.parallel import parallel, prange, threadid
 from libc.stdlib cimport malloc, realloc, free, rand, srand, abs
-from cython.operator cimport cpow
 
 
 cdef extern from *:
@@ -42,7 +41,7 @@ cdef Particle *parlist = NULL
 cdef SParticle *parlistcopy = NULL
 cdef ParSys *psys = NULL
 cdef KDTree *kdtree = NULL
-print("cmolcore imported with success! v1.13")
+print("cmolcore imported with success! v1.12")
 
 
 cpdef init(importdata):
@@ -647,7 +646,6 @@ cpdef memfree():
 
 
 #@cython.cdivision(True)
-@cpow(True)
 cdef void collide(Particle *par)nogil:
     global kdtree
     global deltatime
@@ -862,7 +860,6 @@ cdef void collide(Particle *par)nogil:
 
                         create_link(par.id,par.sys.link_max * 2, par2.id)
 
-@cpow(True)
 cdef void solve_link(Particle *par)nogil:
     global parlist
     global deltatime
@@ -1348,7 +1345,6 @@ cdef void KDTree_rnn_search(
                 depth + 1
             )
 
-@cpow(True)
 cdef void create_link(int par_id, int max_link, int parothers_id=-1)nogil:
     global kdtree
     global parlist
