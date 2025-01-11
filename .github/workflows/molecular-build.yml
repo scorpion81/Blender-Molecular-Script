@@ -36,9 +36,9 @@ jobs:
       # run: echo "::set-output name=version::$(python make_release.py)"
       run: echo "version=$(python make_release.py)" >> $GITHUB_OUTPUT
     - name: Upload windows zip
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        path: molecular_${{steps.build.outputs.version}}_win.zip
+        path: molecular_${{ steps.build.outputs.version }}_win.zip
         name: molecular_win
 
   build_linux:
@@ -70,9 +70,9 @@ jobs:
       #run: echo "::set-output name=version::$(python make_release.py)"
       run: echo "version=$(python make_release.py)" >> $GITHUB_OUTPUT
     - name: Upload linux zip
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        path: molecular_${{steps.build.outputs.version}}_linux.zip
+        path: molecular_${{ steps.build.outputs.version }}_linux.zip
         name: molecular_linux
   
   build_macos:
@@ -100,9 +100,9 @@ jobs:
       #run: echo "::set-output name=version::$(python make_release.py)"
       run: echo "version=$(python make_release.py)" >> $GITHUB_OUTPUT
     - name: Upload mac zip
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        path: molecular_${{steps.build.outputs.version}}_mac.zip
+        path: molecular_${{ steps.build.outputs.version }}_mac.zip
         name: molecular_mac
 
   upload_draft:
@@ -114,15 +114,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: molecular_win
         
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: molecular_linux
         
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: molecular_mac
         
